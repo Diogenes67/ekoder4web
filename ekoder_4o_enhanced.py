@@ -9,7 +9,7 @@ import streamlit as st
 #  Streamlit page config MUST BE FIRST
 # -----------------------------------------------------------------
 st.set_page_config(
-    page_title="EKoder-4o Enhanced",
+    page_title="EKoder Pro",
     page_icon="🏥",
     layout="wide",
     initial_sidebar_state="collapsed",  # Changed to collapsed
@@ -37,7 +37,7 @@ def get_tfidf_salt() -> int:
     return st.session_state["tfidf_salt"]
 # -----------------------------------------------------------------
 
-st.title("EKoder-4o Enhanced – ED Principal Diagnosis Coder")
+st.title("EKoder Pro – ED Diagnosis Coder")
 st.markdown(
     """
 <div style='background-color:#fff3cd; padding:12px; border-radius:6px;
