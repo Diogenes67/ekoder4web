@@ -18,7 +18,7 @@ Step 2: Install Anaconda (if you don't have it)
 Step 3: Download EKoder
 In Terminal, copy and paste each line below, pressing Enter after each:
 cd ~/Desktop
-git clone https://github.com/YOUR_USERNAME/ekoder4o-enhanced.git
+git clone https://github.com/Diogenes67/ekoder4o-enhanced.git
 cd ekoder4o-enhanced
 Step 4: Create the Environment
 Copy and paste this line in Terminal and press Enter:
@@ -92,7 +92,7 @@ chmod +x ~/Desktop/Start_EKoder.command
 Now you'll have a "Start_EKoder" icon on your Desktop - just double-click it to start!
 
 Remember to replace:
-•YOUR_USERNAME with the actual GitHub username
+•Diogenes67 with the actual GitHub username
 •your-key-here with the actual OpenAI API key
 •[your-email@example.com] with actual contact info
 
