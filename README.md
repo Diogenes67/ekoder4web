@@ -1,4 +1,4 @@
-EKoder-4o Enhanced
+EKoder Pro
 A tool that helps emergency doctors find the right medical codes for patient diagnoses.
 What You Need Before Starting
 1A Mac computer (Windows instructions coming soon)
