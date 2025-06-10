@@ -16,6 +16,7 @@ st.set_page_config(
 )
 
 # Now do other imports after page config is set
+import os
 from openai import OpenAI
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -59,6 +60,21 @@ if not ENHANCED_AVAILABLE:
 #  Sidebar controls
 # -----------------------------------------------------------------
 st.sidebar.header("⚙️ Settings")
+
+# API Key input
+api_key = st.sidebar.text_input(
+    "OpenAI API Key",
+    type="password",
+    placeholder="sk-...",
+    help="Enter your OpenAI API key. Get one at https://platform.openai.com/api-keys"
+)
+
+if api_key:
+    os.environ["OPENAI_API_KEY"] = api_key
+elif "OPENAI_API_KEY" not in os.environ:
+    st.error("⚠️ Please enter your OpenAI API key in the sidebar to use EKoder.")
+    st.stop()
+
 debug_mode = st.sidebar.checkbox("🪛 Verbose debug", value=False)  # Changed to False
 
 # Enhanced ranking controls
@@ -175,11 +191,10 @@ def build_enhanced_matcher(df: pd.DataFrame, salt: int):
     
     # Prepare dataframe for enhanced matcher
     df = df.copy()
-    # Rename columns to match what enhanced matcher expects
-    df = df.rename(columns={
-        'ED Short List code': 'ICD_10_CM_diagnosis_codes',
-        'ED Short List Included conditions': 'ED Short List Included'
-    })
+    # The enhanced matcher expects these exact columns
+    df['ICD_10_CM_diagnosis_codes'] = df['ED Short List code']
+    df['ED Short List Included'] = df['ED Short List Included conditions'].fillna('')
+    df['description'] = df['ED Short List Term'].fillna('')
     
     # Create the matcher
     matcher = EnhancedClinicalMatcher(df)
@@ -209,7 +224,12 @@ try:
             codes_df["ED Short List Included conditions"].fillna("")
         )
     )
-    client = OpenAI()
+    
+    try:
+        client = OpenAI()
+    except Exception as e:
+        st.error(f"Failed to initialize OpenAI client. Please check your API key.")
+        st.stop()
 
     if debug_mode:
         st.sidebar.write("**Loaded successfully:**")
@@ -252,7 +272,7 @@ def process_note(note_text: str):
         key_symptoms = extract_key_symptoms(note_text)
 
         # Choose ranking method based on settings
-        if use_enhanced_ranking and enhanced_matcher:
+        if use_enhanced_ranking and enhanced_matcher and ranking_method:
             # Use enhanced matcher
             enhanced_results = enhanced_matcher.rank_codes(
                 note_text,
@@ -264,11 +284,13 @@ def process_note(note_text: str):
             # Convert back to expected format
             codes_df_work = codes_df.copy()
             
-            # Map enhanced results back to original dataframe
-            for idx, row in enhanced_results.iterrows():
-                mask = codes_df_work['ED Short List code'] == row['ICD_10_CM_diagnosis_codes']
-                if mask.any():
-                    codes_df_work.loc[mask, 'Score'] = row['similarity_score']
+            # Check if enhanced_results is a DataFrame
+            if hasattr(enhanced_results, 'iterrows'):
+                # Map enhanced results back to original dataframe
+                for idx, row in enhanced_results.iterrows():
+                    mask = codes_df_work['ED Short List code'] == row['ICD_10_CM_diagnosis_codes']
+                    if mask.any():
+                        codes_df_work.loc[mask, 'Score'] = row['similarity_score']
             
             # Fill any missing scores with 0
             codes_df_work['Score'] = codes_df_work['Score'].fillna(0)
@@ -287,7 +309,7 @@ def process_note(note_text: str):
         # ---------- verbose debug ----------
         if debug_mode:
             st.sidebar.subheader("🔍 Ranking Debug")
-            st.sidebar.write(f"Method: {'Enhanced ' + ranking_method if use_enhanced_ranking else 'Original TF-IDF'}")
+            st.sidebar.write(f"Method: {'Enhanced ' + (ranking_method or '') if use_enhanced_ranking else 'Original TF-IDF'}")
             st.sidebar.write("Max score:", f"{codes_df_work['Score'].max():.4f}")
             st.sidebar.write("Top 10 avg:", f"{codes_df_work['Score'].nlargest(10).mean():.4f}")
 
@@ -332,7 +354,7 @@ Include the full term from the provided list for each code."""
 
     # ---------- GPT call ----------
     try:
-        gpt_resp = client.chat.completions.create(
+        response = client.chat.completions.create(
             model=gpt_model,
             messages=[
                 {"role": "system",
@@ -341,7 +363,12 @@ Include the full term from the provided list for each code."""
             ],
             temperature=temperature,
             max_tokens=500,
-        ).choices[0].message.content.strip()
+        )
+        gpt_resp = response.choices[0].message.content
+        if gpt_resp:
+            gpt_resp = gpt_resp.strip()
+        else:
+            gpt_resp = ""
     except Exception as e:
         st.error(f"{gpt_model} error: {e}")
         return None
@@ -469,11 +496,11 @@ with tab_batch:
                             scale_match = codes_df.loc[
                                 codes_df["ED Short List code"] == c, "Scale"
                             ]
-                            if not scale_match.empty:
-                                try:
-                                    row[f"Scale {j}"] = int(scale_match.iloc[0])
-                                except Exception:
-                                    row[f"Scale {j}"] = ""
+                        if not scale_match.empty and len(scale_match) > 0:
+                            try:
+                                row[f"Scale {j}"] = int(scale_match.iloc[0])
+                            except Exception:
+                                row[f"Scale {j}"] = ""
                     rows.append(row)
 
                     if debug_mode:
