@@ -38,13 +38,54 @@ def get_tfidf_salt() -> int:
     return st.session_state["tfidf_salt"]
 # -----------------------------------------------------------------
 
+# Add custom CSS for consistent table styling and app-wide font
+st.markdown("""
+<style>
+/* Apply professional font stack to entire app */
+html, body, [class*="css"] {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Style for the legend table */
+[data-testid="stTable"] {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+[data-testid="stTable"] td {
+    font-size: 16px !important;
+    padding: 8px !important;
+    font-weight: 400;
+}
+[data-testid="stTable"] th {
+    font-size: 16px !important;
+    font-weight: 600;
+}
+/* Monospace for dollar signs to ensure alignment */
+[data-testid="stTable"] td:first-child {
+    font-family: "Courier New", Courier, monospace;
+    font-weight: 600;
+}
+
+/* Ensure all Streamlit elements use the professional font */
+.stButton > button,
+.stTextInput > div > div > input,
+.stTextArea > div > div > textarea,
+.stSelectbox label,
+.stMarkdown,
+.stText,
+h1, h2, h3, h4, h5, h6,
+p, div, span {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Logo and title using columns
 col1, col2 = st.columns([1, 10])
 with col1:
     # Option 1: If you have a logo file (uncomment the line below)
     st.image("assets/logo.png", width=100)
     
-   
+    
     
 with col2:
     st.title("EKoder Pro – ED Diagnosis Coder")
@@ -66,6 +107,19 @@ compliance with your organisation's privacy and governance policies.<br><br>
 """,
     unsafe_allow_html=True,
 )
+
+# Add Complexity Code Legend
+with st.expander("💰 Complexity Code Weighting (only one factor in funding)", expanded=False):
+    st.markdown("""
+    | Symbol | Range |
+    |--------|-------|
+    | $ | <$600 |
+    | $$ | $600-$800 |
+    | $$$ | $800-$1000 |
+    | $$$$ | $1000-$1200 |
+    | $$$$$ | $1200-$1400 |
+    | $$$$$$ | >$1400 |
+    """)
 
 # Show warning here if enhanced matcher not available
 if not ENHANCED_AVAILABLE:
