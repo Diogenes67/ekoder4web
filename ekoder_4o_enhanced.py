@@ -38,15 +38,30 @@ def get_tfidf_salt() -> int:
     return st.session_state["tfidf_salt"]
 # -----------------------------------------------------------------
 
-st.title("EKoder Pro – ED Diagnosis Coder")
+# Logo and title using columns
+col1, col2 = st.columns([1, 10])
+with col1:
+    # Option 1: If you have a logo file (uncomment the line below)
+    st.image("assets/logo.png", width=100)
+    
+   
+    
+with col2:
+    st.title("EKoder Pro – ED Diagnosis Coder")
+
+# Check if API key is set
+if "OPENAI_API_KEY" not in os.environ or not os.environ.get("OPENAI_API_KEY"):
+    st.info("📌 Please add your OpenAI API Key in the sidebar to get started")
+
 st.markdown(
     """
-<div style='background-color:#fff3cd; padding:12px; border-radius:6px;
-            border:1px solid #ffe69c; margin-bottom:20px;'>
+<div style='background-color:white; padding:12px; border-radius:6px;
+            border:1px solid #ccc; margin-bottom:20px;'>
 <b>Disclaimer:</b> <i>EKoder-4o</i> is a research and educational tool.  
 It does <u>not</u> provide medical advice, and outputs must be reviewed by
 qualified clinical staff. Use only with fully de-identified notes and in
-compliance with your organisation's privacy and governance policies.
+compliance with your organisation's privacy and governance policies.<br><br>
+<b>Please enter OpenAI API Key into sidebar.</b>
 </div>
 """,
     unsafe_allow_html=True,
@@ -60,6 +75,9 @@ if not ENHANCED_AVAILABLE:
 #  Sidebar controls
 # -----------------------------------------------------------------
 st.sidebar.header("⚙️ Settings")
+
+# Add sidebar logo (optional)
+# st.sidebar.image("assets/logo.png", width=100)
 
 # API Key input
 api_key = st.sidebar.text_input(
@@ -438,7 +456,9 @@ with tab_paste:
     col1, col2, _ = st.columns([1, 1, 3])
     with col1:
         if st.button("🚀 Process Note", type="primary", key="process_paste"):
-            if note_input:
+            if not os.environ.get("OPENAI_API_KEY"):
+                st.error("❌ Please enter OpenAI API Key in the sidebar")
+            elif note_input:
                 st.session_state.processed_note  = note_input
                 st.session_state.processing_result = process_note(note_input)
                 st.rerun()
@@ -464,9 +484,12 @@ with tab_upload:
             )
 
         if st.button("🚀 Process This File", type="primary", key="process_upload"):
-            st.session_state.processed_note  = file_content
-            st.session_state.processing_result = process_note(file_content)
-            st.rerun()
+            if not os.environ.get("OPENAI_API_KEY"):
+                st.error("❌ Please enter OpenAI API Key in the sidebar")
+            else:
+                st.session_state.processed_note  = file_content
+                st.session_state.processing_result = process_note(file_content)
+                st.rerun()
 
 # ----- Batch tab -----
 with tab_batch:
@@ -480,8 +503,11 @@ with tab_batch:
     if files:
         st.info(f"{len(files)} file(s) ready")
         if st.button("🚀 Run batch"):
-            rows, dbg_rows = [], []
-            prog = st.progress(0.0, text="Classifying …")
+            if not os.environ.get("OPENAI_API_KEY"):
+                st.error("❌ Please enter OpenAI API Key in the sidebar")
+            else:
+                rows, dbg_rows = [], []
+                prog = st.progress(0.0, text="Classifying …")
 
             for i, f in enumerate(files, 1):
                 txt    = f.getvalue().decode(errors="ignore")

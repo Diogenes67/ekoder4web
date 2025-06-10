@@ -1,0 +1,19 @@
+[theme]
+# Primary color for interactive elements
+primaryColor = "#004080"
+
+# Background color for the main content area
+backgroundColor = "#e8f4f0"
+
+# Background color for sidebar and most interactive widgets
+secondaryBackgroundColor = "#d0e8e0"
+
+# Color used for almost all text
+textColor = "#003366"
+
+# Font family for all text in the app
+font = "sans serif"
+
+[server]
+# Disable file watcher
+fileWatcherType = "none"
