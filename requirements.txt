@@ -1,0 +1,6 @@
+streamlit>=1.33
+openai>=1.14
+pandas>=2.2
+numpy>=1.26
+scikit-learn>=1.4
+sentence-transformers>=2.7
